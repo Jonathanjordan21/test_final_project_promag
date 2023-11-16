@@ -13,9 +13,10 @@ from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from src.exception import CustomException
 
-
-import time
+from src.logger import logging
+import time,sys
 
 
 import pandas as pd
@@ -60,7 +61,7 @@ def extract_data(username_toko):#, page=1):
     #     try :
     #         i = max(i,int(page.text.replace(".","")))
     #     except:
-    #         print("Error Occur! page text", page.text)
+    #         logging.info("Error Occur! page text " + str(page.text))
     #         # time.sleep(1)
 
     # if total_page==None:
@@ -105,7 +106,7 @@ def scrape_page(browser, seller):
         #     for y,k in zip(x.find_elements_by_tag_name("span"), ['location','seller']):
         #         els_dict[k].append(y.text)
         #     continue
-        print(x.text)
+        # logging.info(x.text)
         for k,v in class_dicts.items():
             try :
                 if k == "status":
@@ -137,14 +138,14 @@ def scrape_page(browser, seller):
         try :
             if page.get_attribute('data-testid') == "btnShopProductPageNext":
                 page.click()
-                print("Found!, clicked!")
+                logging.info("Found!, clicked!")
                 break
             else :
                 if len(buttons) == 1:
-                    print("All data has been sucessfully retrieved!")
+                    logging.info("All data has been sucessfully retrieved!")
                     return browser,els_dict
         except:
-            print("Error Occur! page text", page.text)
+            logging.info("Error Occur! page text " +str(page.text))
 
     list_class_w = "css-1q90pod"
     list_wait = EC.presence_of_element_located((By.CLASS_NAME, list_class_w))
@@ -183,10 +184,10 @@ def scrape_page(browser, seller):
 # # for row in row_list:
 # #     for item in row.find_elements_by_xpath('./div'):
 # #         for item_elements in item.find_elements_by_xpath('./div[1]/div[1]/div[1]/div[1]/div[1]/div'):
-# #             print(item_elements.get_attribute("class"))
+# #             logging.info(item_elements.get_attribute("class"))
 # for row in row_list:
 #     for item in row.find_elements_by_class_name('pcv3__info-content css-gwkf0u'):
-#         print(item.get_attribute("class"))
+#         logging.info(item.get_attribute("class"))
 
     
 
@@ -218,31 +219,41 @@ def load_data(els_dict):
 
 
 # for el in els:
-#     # print(el.get_attribute("id"))
-#     print(el.get_attribute("class"))
-    # print(el.text)
-
-# for el in content:
+#     # logging.info(el.get_attribute("id"))
+#     logging.info(el.get_attribute("class"))
+    # logging.info(el.text)
 
 
-# print(els)
-# with open('file.txt', 'w') as f:
-#     f.write(content.text)
-# with open('file2.txt', 'w') as f:
-#     f.write(els.text)
+def run(nama_toko, jumlah_halaman):
+    logging.info("Initializing...")
+    data = pd.DataFrame()
+    try :
+        driver = extract_data(nama_toko)
+        logging.info("Start Scrapping")
+        for n in range(1,jumlah_halaman+1):
+            driver, data_dict = scrape_page(driver, nama_toko)
+            data = pd.concat([data,pd.DataFrame(data_dict)])
+            logging.info("Scrapping page " + str(n) + " success!")
+        # data.to_csv(f"{nama_toko}-tokped.csv", index=False)
+    except Exception as err:
+        try :
+            raise CustomException(err,sys)
+        except :
+            pass
+    return data
 
 if __name__ == "__main__":
-    print("Initializing...")
+    logging.info("Initializing...")
     data = pd.DataFrame()
     nama_toko = "unilever"
     driver = extract_data(nama_toko)
-    print("Start Scrapping")
+    logging.info("Start Scrapping")
     for n in range(1,3):
         driver, data_dict = scrape_page(driver, nama_toko)
         data = pd.concat([data,pd.DataFrame(data_dict)])
-        print(data)
-        print("Scrapping page", n, "success!")
+        logging.info(data)
+        logging.info("Scrapping page", n, "success!")
     data.to_csv(f"{nama_toko}-tokped.csv", index=False)
 
 # content = browser.find_element_by_xpath(name_xpath).text
-# print(content)
+# logging.info(content)

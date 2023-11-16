@@ -13,9 +13,10 @@ from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from src.logger import logging
+from src.exception import CustomException
 
-
-import time
+import time,sys
 
 
 import pandas as pd
@@ -84,7 +85,7 @@ def scrape_page(browser):
         #     for y,k in zip(x.find_elements_by_tag_name("span"), ['location','seller']):
         #         els_dict[k].append(y.text)
         #     continue
-        print(x.text)
+        # logging.info(x.text)
         for k,v in class_dicts.items():
             try :
                 if k == "rating":
@@ -117,14 +118,14 @@ def scrape_page(browser):
         try :
             if page.get_attribute('aria-label') == "Laman berikutnya":
                 page.click()
-                print("Found!, clicked!")
+                logging.info("Found!, clicked!")
                 break
             else :
                 if len(buttons) == 1:
-                    print("All data has been sucessfully retrieved!")
+                    logging.info("All data has been sucessfully retrieved!")
                     return browser,els_dict
         except:
-            print("Error Occur! page text", page.text)
+            logging.info("Error Occur! page text " + str(page.text))
 
     list_class_w = "css-1k41fl7"
     list_wait = EC.presence_of_element_located((By.CLASS_NAME, list_class_w))
@@ -143,21 +144,41 @@ def scrape_page(browser):
         time.sleep(0.75)
     return browser,els_dict
 
+def run(link, jumlah_halaman):
+    logging.info("Initializing...")
+    data = pd.DataFrame()
+    # link = "https://www.tokopedia.com/asus/asus-vivobook-a416mao-fhd426-slate-grey?extParam=ivf%3Dfalse%26src%3Dsearch%26whid%3D7377294"
+    try :
+        driver = extract_data(link)
+        logging.info("Start Scrapping")
+        for n in range(1,jumlah_halaman):
+            driver, data_dict = scrape_page(driver)
+            data = pd.concat([data,pd.DataFrame(data_dict)])
+            logging.info("Scrapping page " + str(n) + " success!")
+        data['likes'] = data['likes'].map(lambda x : 0 if x == "Membantu" else x.split(" ")[0]).astype('int')
+        # data.to_csv(f"laptop-review-tokped.csv", index=False)
+    except Exception as err:
+        try :
+            raise CustomException(err,sys)
+        except :
+            pass
+    return data
+
 
 
 if __name__ == "__main__":
-    print("Initializing...")
+    logging.info("Initializing...")
     data = pd.DataFrame()
     link = "https://www.tokopedia.com/asus/asus-vivobook-a416mao-fhd426-slate-grey?extParam=ivf%3Dfalse%26src%3Dsearch%26whid%3D7377294"
     driver = extract_data(link)
-    print("Start Scrapping")
+    logging.info("Start Scrapping")
     for n in range(1,6):
         driver, data_dict = scrape_page(driver)
         data = pd.concat([data,pd.DataFrame(data_dict)])
-        print(data)
-        print("Scrapping page", n, "success!")
+        logging.info(data)
+        logging.info("Scrapping page", n, "success!")
     data['likes'] = data['likes'].map(lambda x : 0 if x == "Membantu" else x.split(" ")[0]).astype('int')
     data.to_csv(f"laptop-review-tokped.csv", index=False)
 
 # content = browser.find_element_by_xpath(name_xpath).text
-# print(content)
+# logging.info(content)

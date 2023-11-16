@@ -13,9 +13,10 @@ from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from src.logger import logging
+from src.exception import CustomException
 
-
-import time
+import time,sys
 
 
 import pandas as pd
@@ -84,7 +85,7 @@ def scrape_page(browser, seller):
         #     for y,k in zip(x.find_elements_by_tag_name("span"), ['location','seller']):
         #         els_dict[k].append(y.text)
         #     continue
-        print(x.text)
+        # logging.info(x.text)
         for k,v in class_dicts.items():
             try :
                 if k == "rating":
@@ -117,14 +118,14 @@ def scrape_page(browser, seller):
         try :
             if page.get_attribute('aria-label') == "Laman berikutnya":
                 page.click()
-                print("Found!, clicked!")
+                logging.info("Found!, clicked!")
                 break
             else :
                 if len(buttons) == 1:
-                    print("All data has been sucessfully retrieved!")
+                    logging.info("All data has been sucessfully retrieved!")
                     return browser,els_dict
         except:
-            print("Error Occur! page text", page.text)
+            logging.info("Error Occur! page text " +  str(page.text))
 
     list_class_w = "css-1k41fl7"
     list_wait = EC.presence_of_element_located((By.CLASS_NAME, list_class_w))
@@ -145,19 +146,40 @@ def scrape_page(browser, seller):
 
 
 
+def run(nama_toko, jumlah_halaman):
+    logging.info('Initializing....')
+    data = pd.DataFrame()
+
+    try :
+        driver = extract_data(nama_toko)
+        logging.info('Start Scrapping...')
+        for n in range(1,jumlah_halaman+1):
+            driver, data_dict = scrape_page(driver, nama_toko)
+            data = pd.concat([data,pd.DataFrame(data_dict)])
+            logging.info("Scrapping page " + str(n) + " success!")
+        data['likes'] = data['likes'].map(lambda x : 0 if x == "Membantu" else x.split(" ")[0]).astype('int')
+        # data.to_csv(f"{nama_toko}-review-tokped.csv", index=False)
+    except Exception as err:
+        try :
+            raise CustomException(err,sys)
+        except :
+            pass
+    return data
+
+
 if __name__ == "__main__":
-    print("Initializing...")
+    logging.info("Initializing...")
     data = pd.DataFrame()
     nama_toko = "unilever"
     driver = extract_data(nama_toko)
-    print("Start Scrapping")
+    logging.info("Start Scrapping")
     for n in range(1,6):
         driver, data_dict = scrape_page(driver, nama_toko)
         data = pd.concat([data,pd.DataFrame(data_dict)])
-        print(data)
-        print("Scrapping page", n, "success!")
+        logging.info(data)
+        logging.info("Scrapping page", n, "success!")
     data['likes'] = data['likes'].map(lambda x : 0 if x == "Membantu" else x.split(" ")[0]).astype('int')
     data.to_csv(f"{nama_toko}-review-tokped.csv", index=False)
 
 # content = browser.find_element_by_xpath(name_xpath).text
-# print(content)
+# logging.info(content)

@@ -26,11 +26,12 @@ logging.info("{custom info}")
 For Errors / Exceptions, use CustomException class in exception
 ```python
 from src.exception import CustomException
+import sys
 
 try :
     1/0 # some error / bug in program
 except Exception as err :
-    raise CustomException(err, sys) # CustomException will automatically store the error information inside logs folder
+    raise CustomException(err, sys) # CustomException automatically stores the error info inside logs folder
 ```
 
 The logs will be stored in logs folder. The logs folder is not pushed to github as it contains sensitive information

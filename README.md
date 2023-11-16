@@ -16,14 +16,14 @@ python -m unittest -v tests.{test_name}.{TestClassName}.{test_method_name}
 
 <br>
 Add several logs in the python file using logger
-```python
+```py
 from src.logger import logging
 
 logging.info("{custom info}")
 ```
 
 For Errors / Exceptions, use CustomException class in exception
-```python
+```py
 from src.exception import CustomException
 
 try :

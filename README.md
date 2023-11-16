@@ -15,14 +15,14 @@ python -m unittest -v tests.{test_name}.{TestClassName}.{test_method_name}
 ```
 
 <br>
-Add several logs in the python file using logger.py
+Add several logs in the python file using logger
 ```python
 from src.logger import logging
 
 logging.info("{custom info}")
 ```
 
-For Errors / Exceptions, use CustomException class in exception.py
+For Errors / Exceptions, use CustomException class in exception
 ```python
 from src.exception import CustomException
 

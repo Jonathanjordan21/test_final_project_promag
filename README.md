@@ -14,16 +14,17 @@ run a single test case function
 python -m unittest -v tests.{test_name}.{TestClassName}.{test_method_name}
 ```
 
-<br>
+# Logging
+
 Add several logs in the python file using logger
-```py
+```python
 from src.logger import logging
 
 logging.info("{custom info}")
 ```
 
 For Errors / Exceptions, use CustomException class in exception
-```py
+```python
 from src.exception import CustomException
 
 try :

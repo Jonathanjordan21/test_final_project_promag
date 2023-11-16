@@ -13,6 +13,7 @@ run a single test case function
 ```bash
 python -m unittest -v tests.{test_name}.{TestClassName}.{test_method_name}
 ```
+
 <br>
 Add several logs in the python file using logger.py
 ```python
@@ -20,6 +21,7 @@ from src.logger import logging
 
 logging.info("{custom info}")
 ```
+
 For Errors / Exceptions, use CustomException class in exception.py
 ```python
 from src.exception import CustomException
@@ -29,5 +31,6 @@ try :
 except Exception as err :
     raise CustomException(err, sys) # CustomException will automatically store the error information inside logs folder
 ```
+
 The logs will be stored in logs folder. The logs folder is not pushed to github as it contains sensitive information
 

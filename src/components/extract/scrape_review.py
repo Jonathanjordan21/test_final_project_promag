@@ -29,7 +29,7 @@ import pandas as pd
 
 
 
-def extract_data(link):#, page=1):
+def extract_data(link, headless):#, page=1):
 
     # firefox_binary = FirefoxBinary()
     url = f'{link}/review'
@@ -38,6 +38,10 @@ def extract_data(link):#, page=1):
     # browser = webdriver.Firefox(firefox_binary=firefox_binary,executable_path=driver)
     options = Options()
     options.add_argument("--disable-javascript")
+    if headless:
+        options.add_argument('--headless')
+        user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36'
+        options.add_argument(f'user-agent={user_agent}')
     # options.set_capability("marionette", True )
     # browser = webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=options)
     browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
@@ -108,9 +112,15 @@ def scrape_page(browser):
                 
 
 
-    ActionChains(browser).move_to_element(
-        WebDriverWait(browser, timeout).until(EC.presence_of_element_located((By.CLASS_NAME, "css-16uzo3v-unf-pagination-item")))
-    ).perform()
+    try :
+        ActionChains(browser).move_to_element(
+            WebDriverWait(browser, timeout).until(EC.presence_of_element_located((By.CLASS_NAME, "css-16uzo3v-unf-pagination-item")))
+        ).perform()
+    except :
+        browser.refresh()
+        ActionChains(browser).move_to_element(
+            WebDriverWait(browser, timeout).until(EC.presence_of_element_located((By.CLASS_NAME, "css-16uzo3v-unf-pagination-item")))
+        ).perform()
 
     buttons = browser.find_elements(By.CLASS_NAME, "css-16uzo3v-unf-pagination-item")
     # len_btn = len(buttons)
@@ -144,14 +154,14 @@ def scrape_page(browser):
         time.sleep(0.75)
     return browser,els_dict
 
-def run(link, jumlah_halaman):
+def run(link, jumlah_halaman, headless=False):
     logging.info("Initializing...")
     data = pd.DataFrame()
     # link = "https://www.tokopedia.com/asus/asus-vivobook-a416mao-fhd426-slate-grey?extParam=ivf%3Dfalse%26src%3Dsearch%26whid%3D7377294"
     try :
-        driver = extract_data(link)
+        driver = extract_data(link,headless)
         logging.info("Start Scrapping")
-        for n in range(1,jumlah_halaman):
+        for n in range(1,jumlah_halaman+1):
             driver, data_dict = scrape_page(driver)
             data = pd.concat([data,pd.DataFrame(data_dict)])
             logging.info("Scrapping page " + str(n) + " success!")

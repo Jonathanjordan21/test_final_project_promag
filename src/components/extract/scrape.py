@@ -29,7 +29,7 @@ import pandas as pd
 
 
 
-def extract_data(keyword):
+def extract_data(keyword, headless):
 
     # firefox_binary = FirefoxBinary()
     url = f'https://www.tokopedia.com/find/{keyword}'
@@ -38,6 +38,10 @@ def extract_data(keyword):
     # browser = webdriver.Firefox(firefox_binary=firefox_binary,executable_path=driver)
     options = Options()
     options.add_argument("--disable-javascript")
+    if headless:
+        options.add_argument('--headless')
+        user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36'
+        options.add_argument(f'user-agent={user_agent}')
     # options.set_capability("marionette", True )
     # browser = webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=options)
     browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
@@ -134,13 +138,11 @@ def scrape_page(browser, next_page):
 
             except :
                 els_dict[k].append("")
-        try :
-            els_dict['link'].append(x.find_element(By.XPATH, ".//*[@class='css-1f2quy8']/a").get_attribute('href'))
-            els_dict['image'].append(x.find_element(By.XPATH, ".//*[@class='css-1q90pod']").get_attribute('src'))
-        except :
-            els_dict['link'].append("")
-            els_dict['image'].append("")
-        
+
+        # els_dict['link'].append(x.find_element(By.XPATH, ".//*[@class='css-1f2quy8']/a").get_attribute('href'))
+        els_dict['link'].append(x.find_element(By.XPATH, "./div/div/a").get_attribute('href'))
+        # els_dict['image'].append(x.find_element(By.XPATH, ".//*[@class='css-1q90pod']").get_attribute('src'))
+        els_dict['image'].append(x.find_element(By.XPATH, ".//*[contains(@class,'pcv3_img_container')]/img").get_attribute('src'))
     
     # logging.info()
 
@@ -237,17 +239,17 @@ def load_data(els_dict):
     # logging.info(el.text)
 
 
-def run(nama_produk, jumlah_halaman):
+def run(nama_produk, jumlah_halaman, headless=False):
     logging.info("Initializing...")
     data = pd.DataFrame()
     try :
-        driver, max_page = extract_data("laptop")
+        driver, max_page = extract_data(nama_produk, headless)
         logging.info("Start Scrapping")
-        for n in range(1,3):
+        for n in range(1,jumlah_halaman+1):
             driver, data_dict = scrape_page(driver, n+1)
             data = pd.concat([data,pd.DataFrame(data_dict)])
             logging.info("Scrapping page " + str(n) + " success!")
-        data.to_csv("data-tokped.csv", index=False)
+        # data.to_csv("data-tokped.csv", index=False)
     except Exception as err:
         try :
             raise CustomException(err,sys)

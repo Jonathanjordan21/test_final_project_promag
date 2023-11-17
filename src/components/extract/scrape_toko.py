@@ -29,7 +29,7 @@ import pandas as pd
 
 
 
-def extract_data(username_toko):#, page=1):
+def extract_data(username_toko, headless):#, page=1):
 
     # firefox_binary = FirefoxBinary()
     url = f'https://www.tokopedia.com/{username_toko}/product/'
@@ -38,6 +38,10 @@ def extract_data(username_toko):#, page=1):
     # browser = webdriver.Firefox(firefox_binary=firefox_binary,executable_path=driver)
     options = Options()
     options.add_argument("--disable-javascript")
+    if headless:
+        options.add_argument('--headless')
+        user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36'
+        options.add_argument(f'user-agent={user_agent}')
     # options.set_capability("marionette", True )
     # browser = webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=options)
     browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
@@ -101,7 +105,7 @@ def scrape_page(browser, seller):
     els_dict['image'] = []
     els_dict['seller'] = []
 
-    for x in browser.find_elements(By.XPATH,f"//div[@class='css-1sn1xa2']"):
+    for x in browser.find_elements(By.XPATH,f"//div[contains(@class, 'prd_container-card')]"):#f"//div[@class='css-1sn1xa2']"):
         # if x.get_attribute("class") == "css-1rn0irl":
         #     for y,k in zip(x.find_elements_by_tag_name("span"), ['location','seller']):
         #         els_dict[k].append(y.text)
@@ -117,8 +121,9 @@ def scrape_page(browser, seller):
 
             except :
                 els_dict[k].append("")
-        els_dict['link'].append(x.find_element(By.XPATH, ".//*[@class='css-1f2quy8']/a").get_attribute('href'))
-        els_dict['image'].append(x.find_element(By.XPATH, ".//*[@class='css-1q90pod']").get_attribute('src'))
+        # els_dict['link'].append(x.find_element(By.XPATH, ".//*[@class='css-1f2quy8']/a").get_attribute('href'))
+        els_dict['link'].append(x.find_element(By.XPATH, "./div/div/a").get_attribute('href'))
+        els_dict['image'].append(x.find_element(By.XPATH, ".//*[contains(@class,'pcv3_img_container')]/img").get_attribute('src'))
         els_dict['seller'].append(seller)
 
 
@@ -224,11 +229,11 @@ def load_data(els_dict):
     # logging.info(el.text)
 
 
-def run(nama_toko, jumlah_halaman):
+def run(nama_toko, jumlah_halaman, headless=False):
     logging.info("Initializing...")
     data = pd.DataFrame()
     try :
-        driver = extract_data(nama_toko)
+        driver = extract_data(nama_toko,headless)
         logging.info("Start Scrapping")
         for n in range(1,jumlah_halaman+1):
             driver, data_dict = scrape_page(driver, nama_toko)

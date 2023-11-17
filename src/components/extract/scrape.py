@@ -32,7 +32,7 @@ import pandas as pd
 def extract_data(keyword):
 
     # firefox_binary = FirefoxBinary()
-    url = 'https://www.tokopedia.com'
+    url = f'https://www.tokopedia.com/find/{keyword}'
     # driver = 'geckodriver.exe'
     # driver = 'C:\\Users\\jonat\\Downloads\\geckodriver-v0.32.2-win32\\geckodriver.exe'
     # browser = webdriver.Firefox(firefox_binary=firefox_binary,executable_path=driver)
@@ -44,14 +44,15 @@ def extract_data(keyword):
 
     browser.get(url)
     timeout = 10
-    search_xpath = "/html[1]/body[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/input[1]"
 
-    search_wait = EC.presence_of_element_located((By.XPATH, search_xpath))
-    WebDriverWait(browser, timeout).until(search_wait)
-    # input_user = input("Mau cari barang apa? ")
-    # input_user = "turtleneck"
-    browser.find_element(By.XPATH,search_xpath).send_keys(keyword)
-    browser.find_element(By.XPATH,search_xpath).send_keys(Keys.ENTER)
+    # search_xpath = "/html[1]/body[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/input[1]"
+
+    # search_wait = EC.presence_of_element_located((By.XPATH, search_xpath))
+    # WebDriverWait(browser, timeout).until(search_wait)
+    # # input_user = input("Mau cari barang apa? ")
+    # # input_user = "turtleneck"
+    # browser.find_element(By.XPATH,search_xpath).send_keys(keyword)
+    # browser.find_element(By.XPATH,search_xpath).send_keys(Keys.ENTER)
     
     y = 10
     for timer in range(0,750):
@@ -105,7 +106,7 @@ def scrape_page(browser, next_page):
         "rating" : "prd_rating-average-text",
         "sold" : "prd_label-integrity",
         "status" : {"css-1o5lmrf":"Pro Merchant", "css-1hkzhs1":"Official Store", "css-xsuazh":"Power Merchant"},
-        # "ads":"css-1ktbh56"
+        "ads":"css-147fo5b"
 
 
         # "shop_tag_cls" : "css-1ktbh56",
@@ -117,12 +118,12 @@ def scrape_page(browser, next_page):
     els_dict['link'] = []
     els_dict['image'] = []
 
-    for x in browser.find_elements(By.XPATH,f"//div[@class='css-llwpbs']"):
+    for x in browser.find_elements(By.XPATH, "//div[contains(@class,'prd_container-card')]"):
         # if x.get_attribute("class") == "css-1rn0irl":
         #     for y,k in zip(x.find_elements_by_tag_name("span"), ['location','seller']):
         #         els_dict[k].append(y.text)
         #     continue
-        # logging.info(x.text)
+        logging.info(x.text)
         for k,v in class_dicts.items():
             try :
                 if k == "status":
@@ -148,7 +149,7 @@ def scrape_page(browser, next_page):
     ).perform()
 
 
-    for page in browser.find_elements(By.CLASS_NAME, "css-bugrro-unf-pagination-item"):
+    for page in browser.find_elements(By.CLASS_NAME,  "css-bugrro-unf-pagination-item"):
         try :
             if next_page == int(page.text):
                 page.click()
@@ -246,7 +247,7 @@ def run(nama_produk, jumlah_halaman):
             driver, data_dict = scrape_page(driver, n+1)
             data = pd.concat([data,pd.DataFrame(data_dict)])
             logging.info("Scrapping page " + str(n) + " success!")
-        # data.to_csv("data-tokped.csv", index=False)
+        data.to_csv("data-tokped.csv", index=False)
     except Exception as err:
         try :
             raise CustomException(err,sys)
